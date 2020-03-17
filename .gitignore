@@ -1,0 +1,6 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+config/model_config.py
+config/data_config.py
