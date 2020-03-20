@@ -107,16 +107,16 @@ def decode_message(message):
 class InsertionEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, host, port):
+    def __init__(self):
+        self.action_space = None  # Currently using a continuous action space, not applicable
+        self.observation_space_shape = (32, 32, 1,)  # Shape of the obvervation space
+
+    def start(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Trying to connect to the environment")
         self.socket.connect((host, port))
         print("Connected to the environment")
 
-        self.action_space = None  # Currently using a continuous action space, not applicable
-        self.observation_space_shape = (32, 32, 1,)  # Shape of the obvervation space
-
-    def start(self):
         sent = self.socket.send(FIRST_MSG)
         if sent == 0:
             raise RuntimeError("socket connection broken")

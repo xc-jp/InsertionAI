@@ -1,1 +1,1 @@
-from gym_foo.envs.foo_env import InsertionEnv
+from gym_insertion.envs.insertion_env import InsertionEnv
