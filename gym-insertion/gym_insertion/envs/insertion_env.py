@@ -151,7 +151,8 @@ class InsertionEnv(gym.Env):
         message = recv_end(self.socket)
         img, coord, done = decode_message(message)
 
-        reward = self.get_reward(img, done)
+        # reward = self.get_reward(coord, done)
+        reward = 1
         new_state = (img, coord)
         infos = None
 

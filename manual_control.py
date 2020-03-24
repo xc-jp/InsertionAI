@@ -4,7 +4,7 @@ import time
 import gym
 import gym_insertion
 import numpy as np
-from Pillow import Image
+from PIL import Image
 
 
 def main():
