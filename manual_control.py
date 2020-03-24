@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import gym
 import gym_insertion
@@ -22,6 +23,12 @@ def main():
     go_left_action = [-1, 0, 0, 0, 0, 0]
     go_right_action = [1, 0, 0, 0, 0, 0]
 
+    delay = 1
+
+    print("Rotating")
+    new_state, reward, done, infos = env.step([0, 0, 0, -90, 0, 0])
+    print(f"New coord: {new_state[1]},  Done: {done}")
+
     for i in range(5):
         print("Going down")
         new_state, reward, done, infos = env.step(go_down_action)
@@ -29,18 +36,22 @@ def main():
         img, coord = new_state
         img = Image.fromarray(np.uint8(img))
         img.save(f"Img_{i}", "JPEG")
+        time.sleep(delay)
     for _ in range(5):
         print("Going up")
         new_state, reward, done, infos = env.step(go_up_action)
         print(f"New coord: {new_state[1]},  Done: {done}")
+        time.sleep(delay)
     for _ in range(5):
         print("Going left")
         new_state, reward, done, infos = env.step(go_left_action)
         print(f"New coord: {new_state[1]},  Done: {done}")
+        time.sleep(delay)
     for _ in range(5):
         print("Going right")
         new_state, reward, done, infos = env.step(go_right_action)
         print(f"New coord: {new_state[1]},  Done: {done}")
+        time.sleep(delay)
 
 
 if __name__ == "__main__":
