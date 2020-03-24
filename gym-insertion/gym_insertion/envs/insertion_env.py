@@ -92,7 +92,7 @@ def decode_message(message):
     coord = message["coord"]
     img = base64.b64decode(message["image"])[:-5]
     img = Image.open(io.BytesIO(img))
-    img = np.array(img)[:, :, :3]/255  # Try to just do img/255
+    img = np.array(img)[:, :, :3]  # Divide by 255 later.
     done = message["done"]
 
     if message["action"] == "FIRST" or message["action"] == "RESET":
