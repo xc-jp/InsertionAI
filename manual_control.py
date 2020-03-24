@@ -2,6 +2,8 @@ import argparse
 
 import gym
 import gym_insertion
+import numpy as np
+from Pillow import Image
 
 
 def main():
@@ -20,10 +22,13 @@ def main():
     go_left_action = [-1, 0, 0, 0, 0, 0]
     go_right_action = [1, 0, 0, 0, 0, 0]
 
-    for _ in range(5):
+    for i in range(5):
         print("Going down")
         new_state, reward, done, infos = env.step(go_down_action)
         print(f"New coord: {new_state[1]},  Done: {done}")
+        img, coord = new_state
+        img = Image.fromarray(np.uint8(img))
+        img.save(f"Img_{i}", "JPEG")
     for _ in range(5):
         print("Going up")
         new_state, reward, done, infos = env.step(go_up_action)
