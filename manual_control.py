@@ -3,6 +3,7 @@ import time
 
 import gym
 import gym_insertion
+import numpy as np
 from PIL import Image
 
 
@@ -33,7 +34,7 @@ def main():
         new_state, reward, done, infos = env.step(go_down_action)
         print(f"New coord: {new_state[1]},  Done: {done}")
         img, coord = new_state
-        img = Image.fromarray(img)
+        img = Image.fromarray(np.asarray(img))
         img.save(f"Img_{i}", "JPEG")
         time.sleep(delay)
     for _ in range(5):

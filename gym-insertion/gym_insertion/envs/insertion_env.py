@@ -96,9 +96,9 @@ def decode_message(message):
     done = message["done"]
 
     if message["action"] == "FIRST" or message["action"] == "RESET":
-        return coord, img, None
+        return img, coord, None
     elif message["action"] == "STEP":
-        return coord, coord, done
+        return img, coord, done
     else:
         logging.error("Received an unexpected action: {}".format(message["action"]))
         return -1
