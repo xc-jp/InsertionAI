@@ -25,9 +25,10 @@ def main():
 
     delay = 1
 
-    print("Rotating")
-    new_state, reward, done, infos = env.step([0, 0, 0, -90, 0, 0])
-    print(f"New coord: {new_state[1]},  Done: {done}")
+    for i in range(5):
+        print("Rotating")
+        new_state, reward, done, infos = env.step([0, 0, 0, -1, 0, 0])
+        print(f"New coord: {new_state[1]},  Done: {done}")
 
     for i in range(5):
         print("Going down")
@@ -35,7 +36,7 @@ def main():
         print(f"New coord: {new_state[1]},  Done: {done}")
         img, coord = new_state
         img = Image.fromarray(np.asarray(img))
-        img.save(f"Img_{i}", "JPEG")
+        img.save(f"../Img_{i}", "JPEG")
         time.sleep(delay)
     for _ in range(5):
         print("Going up")

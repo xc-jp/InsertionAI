@@ -8,6 +8,7 @@ import io
 from PIL import Image
 import numpy as np
 import gym
+from gym import spaces
 # from gym import error, spaces, utils
 # from gym.utils import seeding
 
@@ -108,8 +109,8 @@ class InsertionEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
-        self.action_space = None  # Currently using a continuous action space, not applicable
-        self.observation_space_shape = (32, 32, 1,)  # Shape of the obvervation space
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
+        self.observation_space = spaces.Box(low=0, high=255, shape=(32, 32, 1), dtype=np.uint8)
 
     def start(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -154,11 +155,11 @@ class InsertionEnv(gym.Env):
         # reward = self.get_reward(coord, done)
         reward = 1
         new_state = (img, coord)
-        infos = None
+        infos = {}
 
-        return [new_state, reward, done, infos]
+        return new_state, reward, done, infos
 
-    def reset(self) -> [int]:
+    def reset(self):
         """Tells the server to reset the environnement
 
         Returns:
@@ -171,7 +172,7 @@ class InsertionEnv(gym.Env):
         message = recv_end(self.socket)
         img, coord, _ = decode_message(message)
         new_state = (img, coord)
-        return new_state
+        return new_state, 0, False, {}
 
     def render(self, mode='human', close=False):
         """ Does nothing since the rendering is done in Unity"""
