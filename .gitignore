@@ -3,5 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
+venv
+errors.log
 config/model_config.py
 config/data_config.py

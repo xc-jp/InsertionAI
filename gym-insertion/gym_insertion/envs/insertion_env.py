@@ -4,6 +4,7 @@ import traceback
 import logging
 import base64
 import io
+import math
 
 from PIL import Image
 import numpy as np
@@ -91,9 +92,20 @@ def recv_end(socket, end="<EOF>", buffer_size=800000):
 
 def decode_message(message):
     coord = message["coord"]
-    img = base64.b64decode(message["image"])[:-5]
-    img = Image.open(io.BytesIO(img))
-    img = np.array(img)[:, :, :3]  # Divide by 255 later.
+
+    # Unity version
+    # img = base64.b64decode(message["image"])[:-5]
+    # img = Image.open(io.BytesIO(img))
+
+    # Godot version
+    img = base64.b64decode(message["image"])#[:-5]
+    img = img[8:]
+    img = img.decode("utf-8")[1:-1]
+    img = np.fromstring(img, dtype=int, sep=', ')
+    img = np.reshape(img, (-1, 3))
+    img = np.reshape(img, (-1, int(math.sqrt(len(img))), 3)).astype(np.uint8)
+    img = Image.fromarray(img)
+
     done = message["done"]
 
     if message["action"] == "FIRST" or message["action"] == "RESET":
