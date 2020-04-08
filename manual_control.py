@@ -13,21 +13,22 @@ def main():
     parser.add_argument('--port', default=9090, type=int, help='Port that should be used to connect to the server')
     args = parser.parse_args()
 
-    env = gym.make('insertion-v0')
-    goal_img, goal_coord = env.start(args.host, args.port)
+    env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port})
+    goal_img, goal_coord = env.goal_img, env.goal_coord
     print(f"Goal coord: {goal_coord}")
 
     # Action: [0, 0, 0, 0, 0, 0]  # New coord: x, y, z, alpha, beta, gamma
-    go_down_action = [0, -1, 0, 0, 0, 0]
-    go_up_action = [0, 1, 0, 0, 0, 0]
-    go_left_action = [-1, 0, 0, 0, 0, 0]
-    go_right_action = [1, 0, 0, 0, 0, 0]
+    go_down_action = np.asarray([0, -1, 0, 0, 0, 0])
+    go_up_action = np.asarray([0, 1, 0, 0, 0, 0])
+    go_left_action = np.asarray([-1, 0, 0, 0, 0, 0])
+    go_right_action = np.asarray([1, 0, 0, 0, 0, 0])
+    rotate_action = np.asarray([0, 0, 0, -1, 0, 0])
 
     delay = 1
 
     for i in range(5):
         print("Rotating")
-        new_state, reward, done, infos = env.step([0, 0, 0, -1, 0, 0])
+        new_state, reward, done, infos = env.step(rotate_action)
         print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
 
     for i in range(5):

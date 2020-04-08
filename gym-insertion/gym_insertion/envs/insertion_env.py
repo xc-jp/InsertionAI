@@ -91,20 +91,23 @@ def recv_end(socket, end="<EOF>", buffer_size=800000):
 
 
 def decode_message(message):
-    coord = message["coord"]
+    coord = np.asarray(message["coord"], dtype=np.float32)
 
     # Unity version
     # img = base64.b64decode(message["image"])[:-5]
     # img = Image.open(io.BytesIO(img))
 
     # Godot version
-    img = base64.b64decode(message["image"])#[:-5]
-    img = img[8:]
-    img = img.decode("utf-8")[1:-1]
-    img = np.fromstring(img, dtype=int, sep=', ')
-    img = np.reshape(img, (-1, 3))
-    img = np.reshape(img, (-1, int(math.sqrt(len(img))), 3)).astype(np.uint8)
-    img = Image.fromarray(img)
+    if False:
+        img = base64.b64decode(message["image"])#[:-5]
+        img = img[8:]
+        img = img.decode("utf-8")[1:-1]
+        img = np.fromstring(img, dtype=int, sep=', ')
+        img = np.reshape(img, (-1, 3))
+        img = np.reshape(img, (-1, int(math.sqrt(len(img))), 3)).astype(np.uint8)
+        img = Image.fromarray(img)
+    else:
+        img = 0
 
     done = message["done"]
 
@@ -120,11 +123,16 @@ def decode_message(message):
 class InsertionEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
+    def __init__(self, kwargs):
+        super(InsertionEnv, self).__init__()
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
-        self.observation_space = spaces.Box(low=0, high=255, shape=(32, 32, 1), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
+        # self.observation_space = spaces.Box(low=0, high=255, shape=(32, 32, 1), dtype=np.uint8)
 
-    def start(self, host, port):
+        self._start(kwargs["host"], kwargs["port"])
+
+
+    def _start(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Trying to connect to the environment")
         self.socket.connect((host, port))
@@ -136,7 +144,17 @@ class InsertionEnv(gym.Env):
         message = recv_end(self.socket)
         self.goal_img, self.goal_coord, _ = decode_message(message)
 
-        return self.goal_img, self.goal_coord
+
+    def _get_reward(self, coord: [float], done: bool) -> float:
+        reward = -sum(abs(self.goal_coord[:3] - coord[:3])) + 100 * done
+        return reward
+
+    def _get_done(self, coord: [float], done: bool) -> float:
+        if done:
+            return done
+        else:
+            return any(abs(coord) > 20)
+
 
     def step(self, action: [float]) -> [[int], int, bool, [float]]:
         """Executes the given action
@@ -152,11 +170,13 @@ class InsertionEnv(gym.Env):
             infos: Additional infos
         """
 
+        # action = np.asarray([*action[:3], 0, 0, 0])
+
         step_msg = {}
         step_msg["action"] = "STEP"
-        step_msg["coord"] = action
+        step_msg["coord"] = action.tolist()
 
-        print("Step action: {}".format(step_msg))
+        print(f"Step action: {step_msg}", flush=True)
         step_msg = json.dumps(step_msg) + "<EOF>"
         sent = self.socket.send(step_msg.encode("utf-8"))
         if sent == 0:
@@ -164,12 +184,14 @@ class InsertionEnv(gym.Env):
         message = recv_end(self.socket)
         img, coord, done = decode_message(message)
 
-        # reward = self.get_reward(coord, done)
-        reward = 1
-        new_state = (img, coord)
+        reward = self._get_reward(coord, done)
+        done = self._get_done(coord, done)
+        new_state = coord     # new_state = (img, coord)
         infos = {}
 
+        print(f"New position: {new_state}, new reward: {reward}", flush=True)
         return new_state, reward, done, infos
+
 
     def reset(self):
         """Tells the server to reset the environnement
@@ -183,13 +205,15 @@ class InsertionEnv(gym.Env):
             raise RuntimeError("socket connection broken")
         message = recv_end(self.socket)
         img, coord, _ = decode_message(message)
-        new_state = (img, coord)
-        return new_state, 0, False, {}
+        new_state = coord  # new_state = (img, coord)
+        return new_state
+
 
     def render(self, mode='human', close=False):
         """ Does nothing since the rendering is done in Unity"""
         # Should this actually show the image sent by Unity (current state) ?
         return 0
+
 
     def close(self):
         """Terminates connection with the server"""
