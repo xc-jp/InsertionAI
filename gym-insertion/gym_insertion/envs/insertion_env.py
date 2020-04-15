@@ -5,6 +5,7 @@ import logging
 import base64
 import io
 import math
+import logging
 
 from PIL import Image
 import numpy as np
@@ -98,16 +99,13 @@ def decode_message(message):
     # img = Image.open(io.BytesIO(img))
 
     # Godot version
-    if False:
-        img = base64.b64decode(message["image"])#[:-5]
-        img = img[8:]
-        img = img.decode("utf-8")[1:-1]
-        img = np.fromstring(img, dtype=int, sep=', ')
-        img = np.reshape(img, (-1, 3))
-        img = np.reshape(img, (-1, int(math.sqrt(len(img))), 3)).astype(np.uint8)
-        img = Image.fromarray(img)
-    else:
-        img = 0
+    img = base64.b64decode(message["image"])#[:-5]
+    img = img[8:]
+    img = img.decode("utf-8")[1:-1]
+    img = np.fromstring(img, dtype=int, sep=', ')
+    img = np.reshape(img, (-1, 3))
+    img = np.reshape(img, (-1, int(math.sqrt(len(img))), 3)).astype(np.uint8)
+    # img = Image.fromarray(img)
 
     done = message["done"]
 
@@ -126,17 +124,20 @@ class InsertionEnv(gym.Env):
     def __init__(self, kwargs):
         super(InsertionEnv, self).__init__()
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
-        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
-        # self.observation_space = spaces.Box(low=0, high=255, shape=(32, 32, 1), dtype=np.uint8)
+        if kwargs["use_coord"]:
+            self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
+        else:
+            self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
 
         self._start(kwargs["host"], kwargs["port"])
+        self.use_coord = kwargs["use_coord"]
 
 
     def _start(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("Trying to connect to the environment")
+        print("Trying to connect to the environment", flush=True)
         self.socket.connect((host, port))
-        print("Connected to the environment")
+        print("Connected to the environment", flush=True)
 
         sent = self.socket.send(FIRST_MSG)
         if sent == 0:
@@ -176,7 +177,7 @@ class InsertionEnv(gym.Env):
         step_msg["action"] = "STEP"
         step_msg["coord"] = action.tolist()
 
-        print(f"Step action: {step_msg}", flush=True)
+        logging.debug(f"Step action: {step_msg}", flush=True)
         step_msg = json.dumps(step_msg) + "<EOF>"
         sent = self.socket.send(step_msg.encode("utf-8"))
         if sent == 0:
@@ -186,10 +187,13 @@ class InsertionEnv(gym.Env):
 
         reward = self._get_reward(coord, done)
         done = self._get_done(coord, done)
-        new_state = coord     # new_state = (img, coord)
+        if self.use_coord:
+            new_state = coord
+        else:
+            new_state = img
         infos = {}
 
-        print(f"New position: {new_state}, new reward: {reward}", flush=True)
+        logging.debug(f"New position: {coord}, new reward: {reward}", flush=True)
         return new_state, reward, done, infos
 
 
@@ -205,7 +209,10 @@ class InsertionEnv(gym.Env):
             raise RuntimeError("socket connection broken")
         message = recv_end(self.socket)
         img, coord, _ = decode_message(message)
-        new_state = coord  # new_state = (img, coord)
+        if self.use_coord:
+            new_state = coord
+        else:
+            new_state = img
         return new_state
 
 

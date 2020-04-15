@@ -1,18 +1,15 @@
 import argparse
-import time
 import os
 
 import gym
 import gym_insertion
-from stable_baselines.common.env_checker import check_env
 from stable_baselines import SAC
 from stable_baselines.common.callbacks import CheckpointCallback
-from PIL import Image
-import numpy as np
 
 
 def main():
     parser = argparse.ArgumentParser("Insertion, Manual mode")
+    parser.add_argument('checkpoint_path', type=str, help='Path to checkpoint')
     parser.add_argument('--host', default="192.168.2.121", type=str, help='IP of the server (default is a Windows#2)')
     parser.add_argument('--port', default=9090, type=int, help='Port that should be used to connect to the server')
     parser.add_argument('--use_coord', action="store_true", help='If set, the environment\'s observation space will be coordinates instead of images')
@@ -21,18 +18,18 @@ def main():
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port, "use_coord": args.use_coord})
-    # check_env(env, warn=True)
 
     print(f"Observation space: {env.observation_space}")
     print(f"Action space: {env.action_space}")
-    # print(env.action_space.sample())
 
-    # Save a checkpoint every 1000 steps
-    checkpoint_callback = CheckpointCallback(save_freq=50000, save_path='../checkpoints/', name_prefix='rl_insertion')
+    model = SAC('CnnPolicy', env, verbose=1)
+    model.load(args.checkpoint_path, env=env)
 
-    # model = SAC('MlpPolicy', env, verbose=2)
-    model = SAC('CnnPolicy', env, verbose=1, tensorboard_log="../insertion_tensorboard/")
-    model.learn(50001, callback=checkpoint_callback)
+    obs = env.reset()
+    for i in range(10000):
+        action, _states = model.predict(obs)
+        obs, rewards, dones, info = env.step(action)
+        env.render()
 
 
 if __name__ == "__main__":
