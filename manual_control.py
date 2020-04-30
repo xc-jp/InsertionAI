@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--port', default=9090, type=int, help='Port that should be used to connect to the server')
     args = parser.parse_args()
 
-    env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port})
+    env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port, "use_coord": False})
     goal_img, goal_coord = env.goal_img, env.goal_coord
     print(f"Goal coord: {goal_coord}")
 
@@ -29,30 +29,29 @@ def main():
     for i in range(5):
         print("Rotating")
         new_state, reward, done, infos = env.step(rotate_action)
-        print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
+        print(f"New coord: {infos['coord']},  Done: {done}", flush=True)
 
     for i in range(5):
         print("Going down")
         new_state, reward, done, infos = env.step(go_down_action)
-        print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
-        img, coord = new_state
-        img = Image.fromarray(np.asarray(img))
+        print(f"New coord: {infos['coord']},  Done: {done}", flush=True)
+        img = Image.fromarray(np.asarray(new_state))
         img.save(f"../Img_{i}.jpg", "JPEG")
         time.sleep(delay)
     for _ in range(5):
         print("Going up")
         new_state, reward, done, infos = env.step(go_up_action)
-        print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
+        print(f"New coord: {infos['coord']},  Done: {done}", flush=True)
         time.sleep(delay)
     for _ in range(5):
         print("Going left")
         new_state, reward, done, infos = env.step(go_left_action)
-        print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
+        print(f"New coord: {infos['coord']},  Done: {done}", flush=True)
         time.sleep(delay)
     for _ in range(5):
         print("Going right")
         new_state, reward, done, infos = env.step(go_right_action)
-        print(f"New coord: {new_state[1]},  Done: {done}", flush=True)
+        print(f"New coord: {infos['coord']},  Done: {done}", flush=True)
         time.sleep(delay)
 
 

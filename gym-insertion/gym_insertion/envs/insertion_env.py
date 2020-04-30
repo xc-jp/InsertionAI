@@ -154,7 +154,7 @@ class InsertionEnv(gym.Env):
         if done:
             return done
         else:
-            return any(abs(coord) > 20)
+            return any((*(abs(coord[0:3]) > 20), *(abs(coord[3:6]) > 3.14/2)))
 
 
     def step(self, action: [float]) -> [[int], int, bool, [float]]:
@@ -189,9 +189,10 @@ class InsertionEnv(gym.Env):
         done = self._get_done(coord, done)
         if self.use_coord:
             new_state = coord
+            infos = {}
         else:
             new_state = img
-        infos = {}
+            infos = {"coord": coord}
 
         logging.debug(f"New position: {coord}, new reward: {reward}", flush=True)
         return new_state, reward, done, infos
