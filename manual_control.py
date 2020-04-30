@@ -9,8 +9,8 @@ from PIL import Image
 
 def main():
     parser = argparse.ArgumentParser("Insertion, Manual mode")
-    parser.add_argument('--host', default="192.168.2.121", type=str, help='IP of the server (default is a Windows server)')
-    parser.add_argument('--port', default=9090, type=int, help='Port that should be used to connect to the server')
+    parser.add_argument('--host', default="127.0.0.1", type=str, help='IP of the server')
+    parser.add_argument('--port', default=9081, type=int, help='Port that should be used to connect to the server')
     args = parser.parse_args()
 
     env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port, "use_coord": False})

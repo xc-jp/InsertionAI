@@ -13,8 +13,8 @@ import numpy as np
 
 def main():
     parser = argparse.ArgumentParser("Insertion, Manual mode")
-    parser.add_argument('--host', default="192.168.2.121", type=str, help='IP of the server (default is a Windows#2)')
-    parser.add_argument('--port', default=9090, type=int, help='Port that should be used to connect to the server')
+    parser.add_argument('--host', default="127.0.0.1", type=str, help='IP of the server')
+    parser.add_argument('--port', default=9081, type=int, help='Port that should be used to connect to the server')
     parser.add_argument('--use_coord', action="store_true", help='If set, the environment\'s observation space will be coordinates instead of images')
     args = parser.parse_args()
 
