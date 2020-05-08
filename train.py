@@ -30,8 +30,11 @@ def main():
     # Save a checkpoint every 1000 steps
     checkpoint_callback = CheckpointCallback(save_freq=50000, save_path='../checkpoints/', name_prefix='rl_insertion')
 
-    # model = SAC('MlpPolicy', env, verbose=2)
-    model = SAC('CnnPolicy', env, verbose=1, tensorboard_log="../insertion_tensorboard/")
+    if args.use_coord:
+        model = SAC('MlpPolicy', env, verbose=2, tensorboard_log="../insertion_tensorboard/")
+    else:
+        model = SAC('CnnPolicy', env, verbose=1, tensorboard_log="../insertion_tensorboard/")
+    
     model.learn(50001, callback=checkpoint_callback)
 
 

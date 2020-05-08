@@ -15,7 +15,7 @@ from gym import spaces
 # from gym.utils import seeding
 
 
-logging.basicConfig(filename='errors.log', level=logging.WARNING)
+logging.basicConfig(filename='errors.log', level=logging.WARNING)  # logging.DEBUG
 
 # AI_MSG =  {
 #     "action": "FIRST",  # String, can be "FIRST", "RESET", "STEP" or (optional) "CLOSE"
@@ -165,19 +165,15 @@ class InsertionEnv(gym.Env):
 
         Returns:
             next_state: new state
-            reward: 1 or 0, depending on wether the thing was inserted or not
-            done: True or False, depending on wether the thing was inserted or not
-                  (maybe end experiment if the robot's end goes too far off ?)
-            infos: Additional infos
+            reward: The reward, depends on the distance to the goal and on the success of the task
+            done: True if the peg was inserted or if the peg moved too far away from the goal
+            infos: Additional infos  (potentially the coordinates of the peg)
         """
-
-        # action = np.asarray([*action[:3], 0, 0, 0])
-
         step_msg = {}
         step_msg["action"] = "STEP"
         step_msg["coord"] = action.tolist()
 
-        logging.debug(f"Step action: {step_msg}", flush=True)
+        logging.debug(f"Step action: {step_msg}")
         step_msg = json.dumps(step_msg) + "<EOF>"
         sent = self.socket.send(step_msg.encode("utf-8"))
         if sent == 0:
@@ -194,7 +190,7 @@ class InsertionEnv(gym.Env):
             new_state = img
             infos = {"coord": coord}
 
-        logging.debug(f"New position: {coord}, new reward: {reward}", flush=True)
+        logging.debug(f"New position: {coord}, new reward: {reward}")
         return new_state, reward, done, infos
 
 
@@ -218,7 +214,7 @@ class InsertionEnv(gym.Env):
 
 
     def render(self, mode='human', close=False):
-        """ Does nothing since the rendering is done in Unity"""
+        """ Does nothing since the rendering is done in Unity/Godot"""
         # Should this actually show the image sent by Unity (current state) ?
         return 0
 
