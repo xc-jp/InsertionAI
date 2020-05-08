@@ -3,16 +3,11 @@ import json
 import traceback
 import logging
 import base64
-import io
 import math
-import logging
 
-from PIL import Image
 import numpy as np
 import gym
 from gym import spaces
-# from gym import error, spaces, utils
-# from gym.utils import seeding
 
 
 logging.basicConfig(filename='errors.log', level=logging.WARNING)  # logging.DEBUG
@@ -27,16 +22,16 @@ logging.basicConfig(filename='errors.log', level=logging.WARNING)  # logging.DEB
 #       - "coord" shoud be the current position and orientation of the goal.
 #       - "image" shoud be the goal image, i.e., image of the connector succesfully inserted.
 #       - "done" should be None
-# --> RESET means that the AI succesfully inserted the object previously or that it took too long / went too far, "coord" is empty
+# --> RESET means that the AI succesfully inserted the object previously or that it took too long, "coord" is empty
 #     * Response should be of type "RESET".
-#       - "coord" should be the current position and orientation of the effector: x, y, z, alpha, beta, gamma   (3D coord)
+#       - "coord" should be the current position and orientation of the effector: x, y, z, alpha, beta, gamma
 #       - "image" should be a picture taken from a fix point that shows both end effector and the goal.
 #       - "done" should be None
 # --> STEP means that the AI wants to move to the point in "coord"
 #     * Response should be of type "STEP".
-#       - "coord" should be the current position and orientation of the effector: x, y, z, alpha, beta, gamma   (3D coord)
+#       - "coord" should be the current position and orientation of the effector: x, y, z, alpha, beta, gamma
 #       - "image" should be a picture taken from a fix point that shows both end effector and the goal.
-#       - "done" should be either 1 or 0. 1 means that the last action resulted in a succesful insertion, should be 0 otherwise.
+#       - "done" should be either 1 or 0. 1 means that the last action resulted in a succesful insertion.
 # --> CLOSE means that the AI wants to disconnect
 
 # SIM_MSG = {
@@ -99,7 +94,7 @@ def decode_message(message):
     # img = Image.open(io.BytesIO(img))
 
     # Godot version
-    img = base64.b64decode(message["image"])#[:-5]
+    img = base64.b64decode(message["image"])  # [:-5]
     img = img[8:]
     img = img.decode("utf-8")[1:-1]
     img = np.fromstring(img, dtype=int, sep=', ')
@@ -125,13 +120,13 @@ class InsertionEnv(gym.Env):
         super(InsertionEnv, self).__init__()
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
         if kwargs["use_coord"]:
-            self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6,), dtype=np.float32)  # x, y, z, alpha, beta, gamma
+            # x, y, z, alpha, beta, gamma
+            self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6,), dtype=np.float32)
         else:
             self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
 
         self._start(kwargs["host"], kwargs["port"])
         self.use_coord = kwargs["use_coord"]
-
 
     def _start(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -145,7 +140,6 @@ class InsertionEnv(gym.Env):
         message = recv_end(self.socket)
         self.goal_img, self.goal_coord, _ = decode_message(message)
 
-
     def _get_reward(self, coord: [float], done: bool) -> float:
         reward = -sum(abs(self.goal_coord[:3] - coord[:3])) + 100 * done
         return reward
@@ -155,7 +149,6 @@ class InsertionEnv(gym.Env):
             return done
         else:
             return any((*(abs(coord[0:3]) > 20), *(abs(coord[3:6]) > 3.14/2)))
-
 
     def step(self, action: [float]) -> [[int], int, bool, [float]]:
         """Executes the given action
@@ -193,7 +186,6 @@ class InsertionEnv(gym.Env):
         logging.debug(f"New position: {coord}, new reward: {reward}")
         return new_state, reward, done, infos
 
-
     def reset(self):
         """Tells the server to reset the environnement
 
@@ -212,12 +204,10 @@ class InsertionEnv(gym.Env):
             new_state = img
         return new_state
 
-
     def render(self, mode='human', close=False):
         """ Does nothing since the rendering is done in Unity/Godot"""
         # Should this actually show the image sent by Unity (current state) ?
         return 0
-
 
     def close(self):
         """Terminates connection with the server"""

@@ -2,7 +2,7 @@ import argparse
 import time
 
 import gym
-import gym_insertion
+import gym_insertion  # noqa: F401
 import numpy as np
 from PIL import Image
 
@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     env = gym.make('insertion-v0', kwargs={'host': args.host, "port": args.port, "use_coord": False})
-    goal_img, goal_coord = env.goal_img, env.goal_coord
+    goal_coord = env.goal_coord
     print(f"Goal coord: {goal_coord}")
 
     # Action: [0, 0, 0, 0, 0, 0]  # New coord: x, y, z, alpha, beta, gamma
